@@ -5,6 +5,7 @@ locals {
   client    = lookup(local.clients, local.client_id, null)
 }
 
+# The invalid.invalid URL is only a defensive fallback; the guard below (precondition) is what blocks bad workspaces.
 provider "grafana" {
   url  = try(local.client.prod_url, "http://invalid.invalid")
   auth = var.grafana_auth
@@ -13,8 +14,8 @@ provider "grafana" {
 resource "terraform_data" "workspace_guard" {
   lifecycle {
     precondition {
-      condition     = local.client != null
-      error_message = "Workspace '${local.client_id}' is not a client in clients.json. Valid: ${join(", ", keys(local.clients))}. Use scripts/tf.sh client-prod <client-id> ..."
+      condition     = local.client != null && try(local.client.prod_url, "") != ""
+      error_message = "Workspace '${local.client_id}' is not a client in clients.json (or has no prod_url). Valid: ${join(", ", keys(local.clients))}. Use scripts/tf.sh client-prod <client-id> ..."
     }
   }
 }

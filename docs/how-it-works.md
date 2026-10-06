@@ -295,10 +295,10 @@ cp .env.example .env              # 1. вписать GITHUB_TOKEN
 ./scripts/bootstrap-repos.sh      # 2. создать репо клиентов (если их нет)
 docker compose up -d              # 3. поднять Grafana
 ./scripts/tf.sh dev apply         # 4. подключить dev ко всем клиентам
-for c in client-1 client-2 client-3; do
-  ./scripts/tf.sh client-prod $c apply   # 5. подключить prod каждого клиента
+for c in $(jq -r 'keys[]' clients.json); do
+  ./scripts/tf.sh client-prod "$c" apply   # 5. подключить prod каждого клиента
 done
-./scripts/verify.sh               # 6. проверить, что всё синхронизировалось 
+./scripts/verify.sh               # 6. проверить, что всё синхронизировалось
 ```
 
 **Токен GitHub** (fine-grained PAT) должен иметь доступ ко **всем** репо клиентов. Права: Contents RW, Pull requests RW, Webhooks RW, Administration R, Metadata R. Где менять: github.com/settings/personal-access-tokens → токен → Edit → Repository access.
@@ -331,6 +331,16 @@ done
 4. Дать токену доступ к новому репо.
 5. `./scripts/tf.sh dev apply` — появится папка "Client 4" в dev.
 6. `./scripts/tf.sh client-prod client-4 apply` — подключится prod клиента 4.
+
+---
+
+## 13b. Как убрать клиента
+
+1. `./scripts/tf.sh client-prod client-X destroy` — пока запись ещё есть в `clients.json`.
+2. Удалить запись клиента из `clients.json`.
+3. `./scripts/tf.sh dev apply` — **осторожно:** Terraform удалит Repository клиента в dev, и Grafana сама удалит в dev папку клиента вместе с дашбордами. В git-репо клиента они останутся.
+4. `terraform -chdir=terraform/client-prod workspace select default && terraform -chdir=terraform/client-prod workspace delete client-X` — удалить workspace.
+5. (Только для POC) убрать сервис `grafana-client-X` и его volume из `docker-compose.yml`.
 
 ---
 

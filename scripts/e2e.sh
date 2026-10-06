@@ -2,6 +2,8 @@
 # Usage: e2e.sh <client-id> — dev folder → client repo `dev` → PR → `main` → client prod, plus isolation from other clients.
 source "$(dirname "$0")/lib.sh"
 load_env
+command -v gh >/dev/null || die "gh not found"
+command -v jq >/dev/null || die "jq not found (brew install jq)"
 CLIENT="${1:-}"; require_client "$CLIENT"
 GH_REPO="$(client_field "$CLIENT" repo)"
 PROD_URL="$(client_field "$CLIENT" prod_url)"
@@ -75,3 +77,4 @@ for other in $(clients); do
   done
   assert_absent "$other prod" "$(prod_dash_status "$(client_field "$other" prod_url)")"
 done
+echo "PASS: $CLIENT e2e + isolation"

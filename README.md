@@ -20,7 +20,7 @@ dev Grafana :3000                       GitHub                               cli
 3. `./scripts/bootstrap-repos.sh` — creates missing client repos with `main`/`dev` and a sample dashboard.
 4. `docker compose up -d`
 5. `./scripts/tf.sh dev apply` — one Git Sync repository per client in dev
-6. `for c in client-1 client-2 client-3; do ./scripts/tf.sh client-prod $c apply; done`
+6. `for c in $(jq -r 'keys[]' clients.json); do ./scripts/tf.sh client-prod "$c" apply; done`
 7. `./scripts/verify.sh` — every repository reaches GitHub and has synced
 
 Login everywhere: `admin` / `admin`. If you change a password in the UI, update `.env` — otherwise Terraform/scripts get 401s and Grafana locks the login for 5 minutes after a few failures.
@@ -31,6 +31,14 @@ Login everywhere: `admin` / `admin`. If you change a password in the UI, update 
 2. Add a `grafana-client-N` service + volume to `docker-compose.yml` (next free port), `docker compose up -d`.
 3. `./scripts/bootstrap-repos.sh`, and give your PAT access to the new repo.
 4. `./scripts/tf.sh dev apply` and `./scripts/tf.sh client-prod client-N apply`.
+
+## Remove a client
+
+1. `./scripts/tf.sh client-prod client-X destroy` (while the entry still exists in `clients.json`).
+2. Remove the entry from `clients.json`.
+3. `./scripts/tf.sh dev apply` — **warning:** this removes the client's dev Repository, and Grafana deletes that folder and its dashboards from dev (they stay in the client's git repo).
+4. `terraform -chdir=terraform/client-prod workspace select default && terraform -chdir=terraform/client-prod workspace delete client-X`.
+5. POC only: remove the `grafana-client-X` service and volume from `docker-compose.yml`.
 
 ## Terraform layout
 
