@@ -18,12 +18,5 @@ services:
     ports: ["3000:3000"]
     volumes: ["grafana-dev-data:/var/lib/grafana"]
 
-  grafana-prod:
-    <<: *grafana
-    container_name: grafana-prod
-    ports: ["3001:3000"]
-    volumes: ["grafana-prod-data:/var/lib/grafana"]
-
 volumes:
   grafana-dev-data:
-  grafana-prod-data:
