@@ -1,0 +1,35 @@
+{
+  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "pb-1791277164"
+  },
+  "spec": {
+    "panels": [
+      {
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "options": {
+          "content": "This dashboard is managed by **Git Sync**.",
+          "mode": "markdown"
+        },
+        "title": "Hello from Git",
+        "type": "text"
+      }
+    ],
+    "schemaVersion": 41,
+    "tags": [
+      "git-sync-poc"
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "title": "Sample Dashboard"
+  }
+}
