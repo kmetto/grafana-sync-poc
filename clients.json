@@ -1,0 +1,5 @@
+{
+  "client-1": { "title": "Client 1", "repo": "kmetto/grafana-client-1", "prod_url": "http://localhost:3001" },
+  "client-2": { "title": "Client 2", "repo": "kmetto/grafana-client-2", "prod_url": "http://localhost:3002" },
+  "client-3": { "title": "Client 3", "repo": "kmetto/grafana-client-3", "prod_url": "http://localhost:3003" }
+}

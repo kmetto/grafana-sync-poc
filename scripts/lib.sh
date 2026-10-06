@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEV_URL="http://localhost:3000"
-PROD_URL="http://localhost:3001"
+CLIENTS_FILE="$ROOT/clients.json"
 REPO_API="/apis/provisioning.grafana.app/v0alpha1/namespaces/default/repositories"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -12,7 +12,6 @@ load_env() {
   [[ -f "$ROOT/.env" ]] || die ".env not found — copy .env.example to .env and fill it in"
   set -a; source "$ROOT/.env"; set +a
   [[ -n "${GITHUB_TOKEN:-}" ]] || die "GITHUB_TOKEN is empty in .env"
-  [[ -n "${GITHUB_REPO_URL:-}" ]] || die "GITHUB_REPO_URL is empty in .env"
   GF_ADMIN_USER="${GF_ADMIN_USER:-admin}"
   GF_ADMIN_PASSWORD="${GF_ADMIN_PASSWORD:-admin}"
 }
@@ -36,4 +35,14 @@ api() {
   API_CODE="$code"
   cat "$out"; rm -f "$out"
   [[ "$code" != 000 && "$code" -lt 400 ]]
+}
+
+# clients — client ids from clients.json, one per line
+clients() { jq -r 'keys[]' "$CLIENTS_FILE"; }
+
+# client_field ID FIELD — prints the field (title|repo|prod_url) or nothing
+client_field() { jq -r --arg c "$1" --arg f "$2" '.[$c][$f] // empty' "$CLIENTS_FILE"; }
+
+require_client() {
+  [[ -n "$(client_field "${1:-}" repo)" ]] || die "unknown client '${1:-}' — valid: $(clients | paste -sd, -)"
 }
