@@ -5,24 +5,33 @@ command -v jq >/dev/null || die "jq not found (brew install jq)"
 
 apply_repo() {
   local base="$1" name="$2" tmpl="$3" rendered
+  wait_healthy "$base"
+  local got
+  got="$(mktemp)"
+  api GET "$base" "$REPO_API/$name" >"$got" 2>&1 || true
+  local method=POST path="$REPO_API" verb=create
+  if [[ "$API_CODE" == 404 ]]; then
+    echo "→ creating $name on $base"
+  elif [[ "$API_CODE" =~ ^2 ]]; then
+    echo "→ $name exists on $base, updating"
+    method=PUT path="$REPO_API/$name" verb=update
+  else
+    cat "$got" >&2; rm -f "$got"
+    die "lookup of $name on $base failed (HTTP $API_CODE)"
+  fi
+  rm -f "$got"
+
   rendered="$(mktemp)"
   perl -pe 's/\$\{(GITHUB_REPO_URL|GITHUB_TOKEN)\}/$ENV{$1}/g' < "$tmpl" > "$rendered"
-
-  wait_healthy "$base"
-  if api GET "$base" "$REPO_API/$name" >/dev/null 2>&1; then
-    echo "→ $name exists on $base, updating"
-    api PUT "$base" "$REPO_API/$name" "$rendered" >/dev/null || { rm -f "$rendered"; die "update of $name failed"; }
-  else
-    echo "→ creating $name on $base"
-    api POST "$base" "$REPO_API" "$rendered" >/dev/null || { rm -f "$rendered"; die "create of $name failed"; }
-  fi
+  local resp
+  resp="$(api "$method" "$base" "$path" "$rendered")" || { rm -f "$rendered"; echo "$resp" >&2; die "$verb of $name failed"; }
   rm -f "$rendered"
 
   echo "→ testing connection for $name"
   local result
   result="$(api POST "$base" "$REPO_API/$name/test" || true)"
-  if [[ "$(jq -r '.success' <<<"$result")" != "true" ]]; then
-    echo "$result" | jq . >&2
+  if [[ "$(jq -r '.success' <<<"$result" 2>/dev/null || true)" != "true" ]]; then
+    jq . <<<"$result" 2>/dev/null >&2 || echo "$result" >&2
     die "$name connection test failed (check token permissions and that branch exists)"
   fi
   echo "  ok"

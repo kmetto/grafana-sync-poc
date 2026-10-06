@@ -20,10 +20,12 @@ Promotion to prod = PR `dev → main`. Prod polls every 30s.
 
 Login: `admin` / `admin`.
 
+Using your own repo: set `GITHUB_REPO_URL` in `.env`; the repo needs `main` and `dev` branches.
+
 ## Demo (manual)
 
 1. In dev, open folder **Git Sync POC (dev)**, create a dashboard, Save → it is committed to `dev`.
-2. `gh pr create --base main --head dev --fill && gh pr merge --merge`
+2. `gh pr create --base main --head dev --fill && gh pr merge dev --merge`
 3. Within ~30s the dashboard shows up in prod under **Git Sync POC (prod)**; it cannot be saved there.
 
 ## Demo (automated)

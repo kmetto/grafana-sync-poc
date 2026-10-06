@@ -26,13 +26,14 @@ wait_healthy() {
   die "Grafana at $url not healthy after 90s"
 }
 
-# api METHOD BASE_URL PATH [BODY_FILE] — prints body, fails on HTTP >= 400
+# api METHOD BASE_URL PATH [BODY_FILE] — prints body, sets API_CODE (lost in $(...) subshells), fails on HTTP 000 or >= 400
 api() {
   local method="$1" base="$2" path="$3" body="${4:-}" out code
   out="$(mktemp)"
   local args=(-s -o "$out" -w '%{http_code}' -u "$GF_ADMIN_USER:$GF_ADMIN_PASSWORD" -X "$method" "$base$path")
   [[ -n "$body" ]] && args+=(-H 'Content-Type: application/yaml' --data-binary "@$body")
-  code="$(curl "${args[@]}")"
+  code="$(curl "${args[@]}")" || code=000
+  API_CODE="$code"
   cat "$out"; rm -f "$out"
-  [[ "$code" -lt 400 ]]
+  [[ "$code" != 000 && "$code" -lt 400 ]]
 }
