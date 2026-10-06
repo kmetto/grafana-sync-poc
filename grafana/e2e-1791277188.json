@@ -1,0 +1,15 @@
+{
+  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "e2e-1791277188"
+  },
+  "spec": {
+    "panels": [],
+    "schemaVersion": 41,
+    "tags": [
+      "e2e"
+    ],
+    "title": "E2E 1791277188"
+  }
+}
