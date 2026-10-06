@@ -13,7 +13,7 @@ Prove that Grafana Git Sync can drive a dev → prod promotion flow through GitH
 
 | Topic | Decision |
 |---|---|
-| Git host | GitHub (this repo, published via `gh repo create`, private) |
+| Git host | GitHub, https://github.com/kmetto/grafana-sync-poc (public); this local repo is pushed there as `origin` |
 | Branches | `dev` — written by dev Grafana; `main` — read by prod Grafana |
 | Promotion | PR `dev → main`, merged manually |
 | Mechanism | Native Git Sync on both instances |
