@@ -22,6 +22,18 @@ post_file() {
   curl -s -o "$resp" -w '%{http_code}' -u "$GF_ADMIN_USER:$GF_ADMIN_PASSWORD" -X POST \
     -H 'Content-Type: application/json' --data-binary "@$body" "$1$REPO_API/$2/files/$FILE?$3"
 }
+# gh_file_status REPO REF PATH — echoes the HTTP status from GitHub ("" if unreachable); gh exits non-zero on 404, hence || true
+gh_file_status() { { gh api -i "repos/$1/contents/$3?ref=$2" 2>/dev/null || true; } | head -1 | awk '{print $2}'; }
+# prod_dash_status BASE — echoes the HTTP status (000 if unreachable) of the e2e dashboard lookup
+prod_dash_status() { curl -s -o /dev/null -w '%{http_code}' -u "$GF_ADMIN_USER:$GF_ADMIN_PASSWORD" "$1/api/dashboards/uid/$UID_" || true; }
+# assert_absent WHAT STATUS — only an explicit 404 counts as absent
+assert_absent() {
+  case "$2" in
+    404) echo "   ok: not in $1" ;;
+    200) die "$FILE leaked into $1" ;;
+    *)   die "cannot check $1 (HTTP '${2:-none}') — isolation unverified" ;;
+  esac
+}
 dash_uid_on() { curl -s -u "$GF_ADMIN_USER:$GF_ADMIN_PASSWORD" "$1/api/dashboards/uid/$UID_" | jq -r '.dashboard.uid // empty'; }
 
 echo "1. $CLIENT prod must reject writes (read-only)"
@@ -58,10 +70,8 @@ echo "6. other clients are isolated"
 for other in $(clients); do
   [[ "$other" == "$CLIENT" ]] && continue
   orepo="$(client_field "$other" repo)"
-  if gh api "repos/$orepo/contents/grafana/$FILE?ref=dev" >/dev/null 2>&1 \
-     || gh api "repos/$orepo/contents/grafana/$FILE?ref=main" >/dev/null 2>&1; then
-    die "$FILE leaked into $orepo"
-  fi
-  [[ -z "$(dash_uid_on "$(client_field "$other" prod_url)")" ]] || die "$UID_ leaked into $other prod"
-  echo "   ok: not in $orepo or $other prod"
+  for ref in dev main; do
+    assert_absent "$orepo@$ref" "$(gh_file_status "$orepo" "$ref" "grafana/$FILE")"
+  done
+  assert_absent "$other prod" "$(prod_dash_status "$(client_field "$other" prod_url)")"
 done
