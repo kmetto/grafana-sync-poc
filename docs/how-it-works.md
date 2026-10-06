@@ -1,9 +1,5 @@
 # Как это всё работает (объяснение на пальцах)
 
-> Статус на 2026-10-06: части, помеченные **[будет]**, ещё в работе (план `docs/superpowers/plans/2026-10-06-multi-client-git-sync.md`, задачи 4–7). Остальное уже работает.
-
----
-
 ## 1. Что мы вообще делаем
 
 У нас есть **клиенты**. Каждому клиенту мы делаем дашборды в Grafana.
@@ -108,13 +104,13 @@ graphana-sync/
 ├── scripts/
 │   ├── lib.sh                   ← общие функции для скриптов
 │   ├── bootstrap-repos.sh       ← создаёт репо клиентов на GitHub
-│   ├── tf.sh                    ← [будет] запускает Terraform
-│   ├── verify.sh                ← [будет] проверяет, что всё синхронизировалось
-│   └── e2e.sh                   ← [будет] автотест всего процесса
+│   ├── tf.sh                    ← запускает Terraform
+│   ├── verify.sh                ← проверяет, что всё синхронизировалось
+│   └── e2e.sh                   ← автотест всего процесса
 └── terraform/
     ├── modules/git-sync-repo/   ← «как создать один Repository»
-    ├── dev/                     ← [будет] настройка dev Grafana
-    └── client-prod/             ← [будет] настройка prod одного клиента
+    ├── dev/                     ← настройка dev Grafana
+    └── client-prod/             ← настройка prod одного клиента
 ```
 
 ---
@@ -179,7 +175,7 @@ Terraform ходит в **тот же API Grafana**, что и UI. Поэтом�
 
 «Рецепт одного Repository». На вход: `uid`, `title`, `repo_url`, `branch`, `workflows`, `github_token`. Сам не знает ни про dev, ни про клиентов — просто кирпичик, который используют `dev/` и `client-prod/`.
 
-### `terraform/dev/` — [будет]
+### `terraform/dev/`
 
 Одна Grafana (dev), в ней по Repository **на каждого клиента** — циклом по `clients.json`:
 
@@ -196,7 +192,7 @@ module "client" {
 
 Один запуск — настроены все клиенты в dev.
 
-### `terraform/client-prod/` — [будет]
+### `terraform/client-prod/`
 
 Тут сложнее. Terraform ходит в Grafana через **провайдер** — это настройка «по какому адресу идти». У каждого клиента **свой адрес**. А Terraform **не умеет создавать провайдеры в цикле**.
 
@@ -230,7 +226,7 @@ module "client" {
 
 Это не страшно: prod клиента настраивается **один раз** при подключении клиента. Дальше дашборды едут через Git Sync, Terraform не нужен. Часто запускается только dev.
 
-### `scripts/tf.sh` — как запускать Terraform — [будет]
+### `scripts/tf.sh` — как запускать Terraform
 
 Не надо помнить флаги и workspace — всё делает обёртка:
 
@@ -298,11 +294,11 @@ terraform import <адрес ресурса в коде> <id объекта в G
 cp .env.example .env              # 1. вписать GITHUB_TOKEN
 ./scripts/bootstrap-repos.sh      # 2. создать репо клиентов (если их нет)
 docker compose up -d              # 3. поднять Grafana
-./scripts/tf.sh dev apply         # 4. подключить dev ко всем клиентам        [будет]
+./scripts/tf.sh dev apply         # 4. подключить dev ко всем клиентам
 for c in client-1 client-2 client-3; do
-  ./scripts/tf.sh client-prod $c apply   # 5. подключить prod каждого клиента  [будет]
+  ./scripts/tf.sh client-prod $c apply   # 5. подключить prod каждого клиента
 done
-./scripts/verify.sh               # 6. проверить, что всё синхронизировалось   [будет]
+./scripts/verify.sh               # 6. проверить, что всё синхронизировалось 
 ```
 
 **Токен GitHub** (fine-grained PAT) должен иметь доступ ко **всем** репо клиентов. Права: Contents RW, Pull requests RW, Webhooks RW, Administration R, Metadata R. Где менять: github.com/settings/personal-access-tokens → токен → Edit → Repository access.
