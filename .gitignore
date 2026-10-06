@@ -2,3 +2,6 @@
 .idea/
 node_modules/
 .superpowers/
+terraform/.terraform/
+*.tfstate
+*.tfstate.*

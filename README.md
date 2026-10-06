@@ -13,14 +13,25 @@ Promotion to prod = PR `dev → main`. Prod polls every 30s.
 
 1. Create a fine-grained GitHub PAT for this repo: Contents RW, Pull requests RW, Metadata R, Administration R, Webhooks RW.
 2. `cp .env.example .env` and set `GITHUB_TOKEN`.
-3. Ensure `jq` is installed (required by `setup.sh` and `e2e.sh`).
-4. Ensure `gh` is authenticated (required by `e2e.sh`).
-5. `docker compose up -d`
-6. `./scripts/setup.sh`
+3. Install Terraform >= 1.11 (`brew install hashicorp/tap/terraform`) and `jq`; authenticate `gh` (needed by `e2e.sh`).
+4. `docker compose up -d`
+5. `./scripts/tf.sh init && ./scripts/tf.sh apply` — creates the Git Sync Repository on each instance
+6. `./scripts/verify.sh` — checks each instance can reach GitHub and has finished a sync (Terraform doesn't check this)
 
-Login: `admin` / `admin`.
+Login: `admin` / `admin`. If you change the admin password in the UI, update `GF_ADMIN_PASSWORD` in `.env`, otherwise Terraform and the scripts get 401s, and Grafana locks the login for 5 minutes after a few failed attempts.
 
 Using your own repo: set `GITHUB_REPO_URL` in `.env`; the repo needs `main` and `dev` branches.
+
+## Terraform layout
+
+- `terraform/main.tf` — two calls of `modules/git-sync-repo`: `poc-dev` (branch `dev`, `workflows = ["write"]`) and `poc-prod` (branch `main`, `workflows = []` = read-only).
+- `terraform/providers.tf` — one `grafana` provider per instance (aliases `dev`, `prod`).
+- `scripts/tf.sh` — runs `terraform -chdir=terraform` with credentials from `.env` passed as `TF_VAR_*`. The GitHub token is a write-only attribute, so it never lands in `terraform.tfstate`; bump `token_version` in the module call to re-send a rotated token.
+- State is local (`terraform/terraform.tfstate`, gitignored).
+
+Terraform talks to the same Grafana API as the UI (`provisioning.grafana.app/v0alpha1`), so the instances must be running before `apply`.
+
+To switch from a PAT to a GitHub App, add a `grafana_apps_provisioning_connection_v0alpha1` per instance and reference it from the repository's `spec.connection` instead of `secure.token`.
 
 ## Demo (manual)
 
