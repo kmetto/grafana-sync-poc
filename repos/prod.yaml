@@ -1,0 +1,19 @@
+apiVersion: provisioning.grafana.app/v0alpha1
+kind: Repository
+metadata:
+  name: poc-prod
+spec:
+  title: Git Sync POC (prod)
+  type: github
+  github:
+    url: ${GITHUB_REPO_URL}
+    branch: main
+    path: grafana/
+  sync:
+    enabled: true
+    intervalSeconds: 30
+    target: folder
+  workflows: []
+secure:
+  token:
+    create: ${GITHUB_TOKEN}
