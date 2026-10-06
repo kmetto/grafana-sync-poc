@@ -18,5 +18,26 @@ services:
     ports: ["3000:3000"]
     volumes: ["grafana-dev-data:/var/lib/grafana"]
 
+  grafana-client-1:
+    <<: *grafana
+    container_name: grafana-client-1
+    ports: ["3001:3000"]
+    volumes: ["grafana-client-1-data:/var/lib/grafana"]
+
+  grafana-client-2:
+    <<: *grafana
+    container_name: grafana-client-2
+    ports: ["3002:3000"]
+    volumes: ["grafana-client-2-data:/var/lib/grafana"]
+
+  grafana-client-3:
+    <<: *grafana
+    container_name: grafana-client-3
+    ports: ["3003:3000"]
+    volumes: ["grafana-client-3-data:/var/lib/grafana"]
+
 volumes:
   grafana-dev-data:
+  grafana-client-1-data:
+  grafana-client-2-data:
+  grafana-client-3-data:
