@@ -1,0 +1,15 @@
+{
+  "apiVersion": "dashboard.grafana.app/v0alpha1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "pe-1791277174"
+  },
+  "spec": {
+    "panels": [],
+    "schemaVersion": 41,
+    "tags": [
+      "x"
+    ],
+    "title": "PE"
+  }
+}
